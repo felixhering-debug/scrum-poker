@@ -3,10 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Scrum Poker</title>
+<title>The Reporting Team Poker Game</title>
 <style>
 :root{
   --panel-a:90%;
+  --grad-text:linear-gradient(120deg,#d81e6b 0%,#e0561f 100%);
   --overlay:linear-gradient(180deg,rgba(60,20,70,.10),rgba(60,20,70,.30));
   --bg:#fff3ea; --panel:#ffffff; --text:#2a1240; --muted:#85648f; --line:#f0d4d6;
   --accent:#d81e6b; --accent-text:#2a0a3a; --accent-soft:#ffe3ec; --accent2:#0e9f98; --ok:#0e9f98; --warn:#e07a1f;
@@ -16,6 +17,7 @@
 }
 [data-theme="dark"]{
   --panel-a:80%;
+  --grad-text:linear-gradient(120deg,#ff5fa2 0%,#ffa04a 100%);
   --overlay:linear-gradient(180deg,rgba(21,10,38,.45),rgba(21,10,38,.82));
   --bg:#150a26; --panel:#231040; --text:#f6ecff; --muted:#b497d6; --line:#3d2063;
   --accent:#ff5fa2; --accent-text:#2a0a3a; --accent-soft:#3a1a5e; --accent2:#2de2d0; --ok:#2de2d0; --warn:#ffb14a;
@@ -112,7 +114,7 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);ou
 .btn.ghost{background:transparent;color:var(--text);box-shadow:none}
 .btn.ghost:hover{background:var(--accent-soft);box-shadow:none}
 .top{border-bottom:1px solid var(--line);box-shadow:0 1px 18px rgba(255,77,148,.15)}
-.logo span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo span{background:var(--grad-text);-webkit-background-clip:text;background-clip:text;color:transparent}
 .chip{border:1px solid var(--accent);color:var(--accent)}
 .panel{border-color:var(--line)}
 .bar .fill{background:var(--grad)}
@@ -124,7 +126,9 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);ou
 .story.cur{border-color:var(--accent);box-shadow:0 0 10px rgba(255,95,162,.25)}
 .badge{background:var(--accent2);color:#10222a}
 .consensus{color:var(--accent2)}
-.landing h1{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;display:inline-block}
+.landing h1{background:var(--grad-text);-webkit-background-clip:text;background-clip:text;color:transparent;display:inline-block;font-size:32px;line-height:1.15;margin:0 0 8px}
+.hero{margin-bottom:16px}
+.landing .hero p.lead{margin:0;color:var(--text);font-size:16px}
 input:focus,select:focus,button:focus-visible{outline-color:var(--accent2)}
 .specrow{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .chk.spec{color:var(--text);font-weight:600}
@@ -146,8 +150,10 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--overl
   <header class="top"><div class="logo">Scrum<span>Poker</span></div><div class="spacer"></div>
     <button class="btn ghost small" data-act="theme" title="Light/dark">◐</button></header>
   <div class="landing">
-    <h1>Estimate effort together</h1>
-    <p class="lead">Create a room, share the link, pick cards in secret and reveal them together.</p>
+    <div class="panel hero">
+      <h1>The Reporting Team Poker Game</h1>
+      <p class="lead">Create a room, share the link, pick cards in secret and reveal them together.</p>
+    </div>
     <div class="panel" style="margin-bottom:16px">
       <div class="field"><label for="nameIn">Your name</label>
         <input id="nameIn" maxlength="24" placeholder="e.g. Anna" autocomplete="off"></div>
