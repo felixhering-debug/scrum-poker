@@ -1,5 +1,7 @@
 # Scrum Poker
 
+Live: https://felixhering-debug.github.io/scrum-poker/
+
 Seite zur Aufwandsschätzung von User Stories im agilen Team, ohne Konten und ohne eigenen Server.
 Statische Seite (GitHub Pages) plus Firebase Realtime Database für die Live-Synchronisierung.
 
