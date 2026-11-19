@@ -121,6 +121,9 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);ou
 .consensus{color:var(--accent2)}
 .landing h1{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;display:inline-block}
 input:focus,select:focus,button:focus-visible{outline-color:var(--accent2)}
+.specrow{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.chk.spec{color:var(--text);font-weight:600}
+.chk input{accent-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -136,6 +139,7 @@ input:focus,select:focus,button:focus-visible{outline-color:var(--accent2)}
     <div class="panel" style="margin-bottom:16px">
       <div class="field"><label for="nameIn">Your name</label>
         <input id="nameIn" maxlength="24" placeholder="e.g. Anna" autocomplete="off"></div>
+      <label class="chk"><input type="checkbox" id="specIn"> 👁 Join as spectator (watch without voting)</label>
       <div class="err-text" id="landErr"></div>
     </div>
     <div class="grid2">
@@ -174,6 +178,7 @@ input:focus,select:focus,button:focus-visible{outline-color:var(--accent2)}
         </div>
         <div class="table" id="table"></div>
         <div class="actions" id="actions"></div>
+        <div class="specrow"><label class="chk spec"><input type="checkbox" id="obsChk"> 👁 Spectator mode – I am not estimating this story</label><div class="muted" id="spectators"></div></div>
       </div>
       <div class="panel" id="resultsPanel" hidden><div id="results"></div></div>
       <div class="panel" id="deckPanel"><div class="muted" style="text-align:center" id="deckHint"></div><div class="deck" id="deck"></div></div>
@@ -192,7 +197,6 @@ input:focus,select:focus,button:focus-visible{outline-color:var(--accent2)}
         <h2>Settings</h2>
         <div class="field"><label for="deckSel">Card deck</label><select id="deckSel"></select></div>
         <label class="chk"><input type="checkbox" id="autoChk"> Reveal automatically when everyone has voted</label>
-        <label class="chk" style="margin-top:8px"><input type="checkbox" id="obsChk"> I am just watching</label>
       </div>
     </div>
   </div>
@@ -329,7 +333,7 @@ function route() {
   if (validCode(code)) { if (S.code !== code) enterRoom(code); }
   else { if (S.code) leaveRoom(); showLanding(); }
 }
-function showLanding() { $("#landing").hidden = false; $("#room").hidden = true; $("#nameIn").value = S.name; }
+function showLanding() { $("#landing").hidden = false; $("#room").hidden = true; $("#nameIn").value = S.name; $("#specIn").checked = lsGet("sp-spec") === "1"; }
 
 /* ---------- Raum betreten / verlassen ---------- */
 async function enterRoom(code) {
@@ -348,8 +352,9 @@ async function enterRoom(code) {
     const rs = await refs.room.get();
     if (!rs.exists) await refs.room.set({deck: lsGet("sp-newdeck") || "fib", round: 1, revealed: false, storyId: null, auto: false, created: Date.now()});
     const ms = await refs.me.get();
-    if (ms.exists) await refs.me.update({name: S.name, seen: Date.now()});
-    else await refs.me.set({name: S.name, observer: false, voted: null, vote: null, voteRound: null, seen: Date.now()});
+    const spec = lsGet("sp-spec") === "1";
+    if (ms.exists) await refs.me.update(spec ? {name: S.name, seen: Date.now(), observer: true, voted: null} : {name: S.name, seen: Date.now(), observer: false});
+    else await refs.me.set({name: S.name, observer: spec, voted: null, vote: null, voteRound: null, seen: Date.now()});
   } catch (e) { banner("Could not join the room (check connection and database rules).", true); }
   S.unsubs.push(refs.room.onSnapshot(s => { S.room = s.exists ? s.data() : null; update(); }, errSub("meta")));
   S.unsubs.push(refs.players.onSnapshot(s => { S.players = s.docs.map(d => Object.assign({id: d.id}, d.data())); update(); }, errSub("players")));
@@ -422,14 +427,15 @@ function render() {
   $("#roundInfo").textContent = "Round " + r.round;
 
   // Tisch
-  const seats = S.players.slice().sort((a, b) => (a.name || "").localeCompare(b.name || "", "en")).map(p => {
+  const seats = S.players.filter(p => !p.observer).slice().sort((a, b) => (a.name || "").localeCompare(b.name || "", "en")).map(p => {
     let card;
-    if (p.observer) card = '<div class="pc obs" title="Observer">👁</div>';
-    else if (r.revealed) card = p.voteRound === r.round && p.vote != null ? '<div class="pc face">' + esc(p.vote) + '</div>' : '<div class="pc empty">–</div>';
+    if (r.revealed) card = p.voteRound === r.round && p.vote != null ? '<div class="pc face">' + esc(p.vote) + '</div>' : '<div class="pc empty">–</div>';
     else card = p.voted === r.round ? '<div class="pc back">✓</div>' : '<div class="pc empty"></div>';
     const you = p.id === S.uid;
     return '<div class="seat' + (isActive(p) ? "" : " off") + '">' + card + '<div class="nm" title="' + esc(p.name) + '">' + esc(p.name || "?") + (you ? "<small>you</small>" : (isActive(p) ? "" : "<small>offline</small>")) + '</div></div>';
   });
+  const specs = S.players.filter(p => p.observer && isActive(p));
+  setHTML($("#spectators"), specs.length ? "👁 Spectators: " + specs.map(p => esc(p.name || "?") + (p.id === S.uid ? " (you)" : "")).join(", ") : "");
   setHTML($("#table"), seats.join("") || '<div class="muted">Waiting for participants …</div>');
 
   // Aktionsleiste
@@ -461,9 +467,8 @@ function render() {
 
   // Karten
   const mine = myVote(), observer = !!(m && m.observer);
-  $("#deckPanel").hidden = observer;
-  $("#deckHint").textContent = r.revealed ? "Round revealed – start a new round to vote again." : (mine != null ? "You have voted. Click the card again to take your vote back." : "Pick your card – it stays hidden until the cards are revealed.");
-  setHTML($("#deck"), deck.cards.map(c => '<button class="dc' + (mine === c ? " sel" : "") + '" data-act="vote" data-v="' + esc(c) + '"' + (r.revealed ? " disabled" : "") + '>' + esc(c) + '</button>').join(""));
+  $("#deckHint").textContent = observer ? "You are a spectator: you can watch and reveal cards, but you do not vote." : r.revealed ? "Round revealed – start a new round to vote again." : (mine != null ? "You have voted. Click the card again to take your vote back." : "Pick your card – it stays hidden until the cards are revealed.");
+  setHTML($("#deck"), observer ? "" : deck.cards.map(c => '<button class="dc' + (mine === c ? " sel" : "") + '" data-act="vote" data-v="' + esc(c) + '"' + (r.revealed ? " disabled" : "") + '>' + esc(c) + '</button>').join(""));
 
   // Stories
   setHTML($("#stories"), S.stories.length ? S.stories.map(s => '<div class="story' + (s.id === r.storyId ? " cur" : "") + '"><span class="t" data-act="pickStory" data-id="' + esc(s.id) + '" title="Estimate this story">' + esc(s.title) + '</span>' + (s.result ? '<span class="badge">' + esc(s.result) + '</span>' : "") + '<button class="x" data-act="delStory" data-id="' + esc(s.id) + '" title="Delete" aria-label="Delete story">×</button></div>').join("") : '<div class="muted">No stories yet.</div>');
@@ -528,7 +533,7 @@ const actions = {
 function takeName() {
   const n = $("#nameIn").value.trim().slice(0, 24);
   if (!n) { $("#landErr").textContent = "Please enter your name."; $("#nameIn").focus(); return false; }
-  $("#landErr").textContent = ""; S.name = n; lsSet("sp-name", n); return true;
+  $("#landErr").textContent = ""; S.name = n; lsSet("sp-name", n); lsSet("sp-spec", $("#specIn").checked ? "1" : "0"); return true;
 }
 function setHash(h) {
   if (h) location.hash = h; else history.replaceState(null, "", location.pathname + location.search);
@@ -549,7 +554,7 @@ function bind() {
   $("#deckSel").addEventListener("change", e => { const r = S.room; if (r && e.target.value !== r.deck) safe(refs.room.update({deck: e.target.value, round: r.round + 1, revealed: false})); });
   $("#autoChk").addEventListener("change", e => safe(refs.room.update({auto: e.target.checked})));
   $("#obsChk").addEventListener("change", async e => {
-    const on = e.target.checked;
+    const on = e.target.checked; lsSet("sp-spec", on ? "1" : "0");
     await safe(refs.me.update(on ? {observer: true, voted: null} : {observer: false}));
     if (on && S.room) await safe(refs.priv.set({round: S.room.round, value: null}));
   });
