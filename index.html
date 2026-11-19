@@ -6,17 +6,21 @@
 <title>Scrum Poker</title>
 <style>
 :root{
-  --bg:#f5f6fa; --panel:#ffffff; --text:#1c2030; --muted:#6b7190; --line:#e1e4ee;
-  --accent:#5b5bd6; --accent-text:#ffffff; --accent-soft:#ebebfb; --ok:#1f9d63; --warn:#c77d0a;
-  --card:#ffffff; --back1:#5b5bd6; --back2:#7676e6; --shadow:0 2px 8px rgba(20,24,50,.08);
+  --bg:#fff3ea; --panel:#ffffff; --text:#2a1240; --muted:#85648f; --line:#f0d4d6;
+  --accent:#d81e6b; --accent-text:#2a0a3a; --accent-soft:#ffe3ec; --accent2:#0e9f98; --ok:#0e9f98; --warn:#e07a1f;
+  --card:#ffffff; --back1:#d81e6b; --back2:#ff8a3d; --shadow:0 2px 10px rgba(120,30,90,.12);
+  --grad:linear-gradient(120deg,#ff4d94 0%,#ff8a3d 100%);
+  --glow:radial-gradient(900px 380px at 50% -120px,rgba(255,120,150,.35),transparent 70%);
 }
 [data-theme="dark"]{
-  --bg:#14161f; --panel:#1d2030; --text:#eceefa; --muted:#9097b8; --line:#2d3148;
-  --accent:#8585f0; --accent-text:#12142a; --accent-soft:#2a2c4d; --ok:#43c487; --warn:#e3a53a;
-  --card:#242843; --back1:#5b5bd6; --back2:#7676e6; --shadow:0 2px 10px rgba(0,0,0,.4);
+  --bg:#150a26; --panel:#231040; --text:#f6ecff; --muted:#b497d6; --line:#3d2063;
+  --accent:#ff5fa2; --accent-text:#2a0a3a; --accent-soft:#3a1a5e; --accent2:#2de2d0; --ok:#2de2d0; --warn:#ffb14a;
+  --card:#2d1650; --back1:#ff3d8b; --back2:#8a3dff; --shadow:0 4px 18px rgba(0,0,0,.45);
+  --grad:linear-gradient(120deg,#ff4d94 0%,#ff9a3d 100%);
+  --glow:radial-gradient(900px 420px at 50% -140px,rgba(255,77,148,.38),rgba(138,61,255,.18) 45%,transparent 72%);
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+html,body{margin:0;background:var(--bg) var(--glow) no-repeat;background-attachment:fixed;color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 button{font:inherit;cursor:pointer}
 input,select{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
 input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
@@ -96,6 +100,27 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);ou
 .x:hover{color:#c43b3b}
 .muted{color:var(--muted);font-size:13px}
 .sum{font-size:13px;color:var(--muted);margin-top:8px}
+
+/* Sunset / neon night palette */
+.btn{background:var(--grad);color:var(--accent-text);box-shadow:0 0 0 rgba(255,95,162,0);transition:box-shadow .15s,filter .15s}
+.btn:hover{filter:brightness(1.06);box-shadow:0 0 14px rgba(255,95,162,.55)}
+.btn.ghost{background:transparent;color:var(--text);box-shadow:none}
+.btn.ghost:hover{background:var(--accent-soft);box-shadow:none}
+.top{border-bottom:1px solid var(--line);box-shadow:0 1px 18px rgba(255,77,148,.15)}
+.logo span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.chip{border:1px solid var(--accent);color:var(--accent)}
+.panel{border-color:var(--line)}
+.bar .fill{background:var(--grad)}
+.bar .track{background:var(--accent-soft)}
+.pc.face{border-color:var(--accent2);color:var(--accent2);box-shadow:0 0 12px rgba(45,226,208,.25)}
+.dc{border-color:var(--accent);color:var(--accent)}
+.dc:hover:not(:disabled){box-shadow:0 0 14px rgba(255,95,162,.5)}
+.dc.sel{background:var(--grad);color:var(--accent-text);border-color:transparent;box-shadow:0 0 18px rgba(255,138,61,.55)}
+.story.cur{border-color:var(--accent);box-shadow:0 0 10px rgba(255,95,162,.25)}
+.badge{background:var(--accent2);color:#10222a}
+.consensus{color:var(--accent2)}
+.landing h1{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;display:inline-block}
+input:focus,select:focus,button:focus-visible{outline-color:var(--accent2)}
 </style>
 </head>
 <body>
@@ -277,7 +302,7 @@ const refs = {};
 /* ---------- Start ---------- */
 async function boot() {
   const th = lsGet("sp-theme");
-  document.documentElement.dataset.theme = th || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.dataset.theme = th || "dark";
   S.name = lsGet("sp-name") || "";
   for (const k in DECKS) { for (const sel of ["#deckIn", "#deckSel"]) { const o = document.createElement("option"); o.value = k; o.textContent = DECKS[k].name; $(sel).appendChild(o); } }
   bind();
