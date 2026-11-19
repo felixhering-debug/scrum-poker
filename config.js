@@ -1,10 +1,12 @@
-// Firebase-Konfiguration (Anleitung: README.md, Schritt 2).
+// Firebase-Konfiguration (Anleitung: README.md).
 // Diese Werte sind öffentlich einsehbar und das ist bei Firebase so vorgesehen;
 // der Schutz kommt aus den Datenbank-Regeln (database.rules.json).
 export const firebaseConfig = {
-  apiKey: "HIER-EINTRAGEN",
-  authDomain: "DEIN-PROJEKT.firebaseapp.com",
-  databaseURL: "https://DEIN-PROJEKT-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "DEIN-PROJEKT",
-  appId: "HIER-EINTRAGEN"
+  apiKey: "AIzaSyBRY5znXIc1YmZMyDuWUttnaGLG64g8NJM",
+  authDomain: "scrum-poker-27e13.firebaseapp.com",
+  databaseURL: "https://scrum-poker-27e13-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "scrum-poker-27e13",
+  storageBucket: "scrum-poker-27e13.firebasestorage.app",
+  messagingSenderId: "756284075355",
+  appId: "1:756284075355:web:4acbde4631a379521b7e7e"
 };
