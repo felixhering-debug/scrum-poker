@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scrum Poker</title>
+<style>
+:root{
+  --bg:#f5f6fa; --panel:#ffffff; --text:#1c2030; --muted:#6b7190; --line:#e1e4ee;
+  --accent:#5b5bd6; --accent-text:#ffffff; --accent-soft:#ebebfb; --ok:#1f9d63; --warn:#c77d0a;
+  --card:#ffffff; --back1:#5b5bd6; --back2:#7676e6; --shadow:0 2px 8px rgba(20,24,50,.08);
+}
+[data-theme="dark"]{
+  --bg:#14161f; --panel:#1d2030; --text:#eceefa; --muted:#9097b8; --line:#2d3148;
+  --accent:#8585f0; --accent-text:#12142a; --accent-soft:#2a2c4d; --ok:#43c487; --warn:#e3a53a;
+  --card:#242843; --back1:#5b5bd6; --back2:#7676e6; --shadow:0 2px 10px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button{font:inherit;cursor:pointer}
+input,select{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+[hidden]{display:none!important}
+.btn{background:var(--accent);color:var(--accent-text);border:0;border-radius:8px;padding:9px 16px;font-weight:600}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--accent-soft)}
+.btn.small{padding:5px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.top{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.logo{font-weight:800;font-size:18px;letter-spacing:-.3px}
+.logo span{color:var(--accent)}
+.spacer{flex:1}
+.chip{background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:4px 12px;font-weight:700;font-family:ui-monospace,Menlo,monospace}
+.banner{background:var(--accent-soft);color:var(--text);padding:8px 20px;font-size:13px;border-bottom:1px solid var(--line)}
+.banner.err{background:#fde8e8;color:#8a1c1c}
+[data-theme="dark"] .banner.err{background:#4a2326;color:#ffd5d5}
+
+/* Landing */
+.landing{max-width:760px;margin:48px auto;padding:0 20px}
+.landing h1{font-size:34px;letter-spacing:-.8px;margin:0 0 6px}
+.landing p.lead{color:var(--muted);margin:0 0 28px;font-size:17px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.grid2{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+.panel h2{margin:0 0 12px;font-size:16px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.row{display:flex;gap:8px;align-items:center}
+.err-text{color:#c43b3b;font-size:13px;min-height:18px}
+
+/* Room */
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;padding:18px 20px;max-width:1280px;margin:0 auto}
+@media(max-width:960px){.wrap{grid-template-columns:1fr}}
+.story-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.story-banner .title{font-size:20px;font-weight:700;flex:1;min-width:180px}
+.round{color:var(--muted);font-size:13px}
+.table{display:flex;flex-wrap:wrap;gap:22px 18px;justify-content:center;padding:26px 8px 12px;min-height:170px}
+.seat{display:flex;flex-direction:column;align-items:center;gap:8px;width:84px}
+.seat.off{opacity:.45}
+.seat .nm{font-size:13px;font-weight:600;max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+.seat .nm small{display:block;color:var(--muted);font-weight:400;font-size:11px}
+.pc{width:58px;height:84px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;border:2px solid var(--line)}
+.pc.empty{border-style:dashed;color:var(--muted);background:transparent}
+.pc.back{border-color:transparent;background:repeating-linear-gradient(45deg,var(--back1),var(--back1) 6px,var(--back2) 6px,var(--back2) 12px);color:#fff}
+.pc.face{background:var(--card);border-color:var(--accent);color:var(--accent);animation:flip .35s ease}
+.pc.obs{border:0;font-size:26px;background:transparent}
+@keyframes flip{from{transform:rotateY(90deg)}to{transform:rotateY(0)}}
+.actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;padding:6px 0 4px}
+.progress{color:var(--muted);font-size:14px}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.results{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start}
+@media(max-width:700px){.results{grid-template-columns:1fr}}
+.kpis{display:flex;gap:22px}
+.kpi .v{font-size:30px;font-weight:800;letter-spacing:-.5px}
+.kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.bars{display:flex;flex-direction:column;gap:6px}
+.bar{display:grid;grid-template-columns:44px 1fr 28px;gap:8px;align-items:center;font-size:13px}
+.bar .track{background:var(--accent-soft);border-radius:6px;height:16px;overflow:hidden}
+.bar .fill{background:var(--accent);height:100%;border-radius:6px}
+.bar b{text-align:right}
+.consensus{color:var(--ok);font-weight:700}
+.final{display:flex;gap:8px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);flex-wrap:wrap}
+.deck{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;padding:14px 4px 6px}
+.dc{width:56px;height:82px;border-radius:10px;border:2px solid var(--accent);background:var(--card);color:var(--accent);font-size:20px;font-weight:800;transition:transform .12s,background .12s;box-shadow:var(--shadow)}
+.dc:hover:not(:disabled){transform:translateY(-6px)}
+.dc.sel{background:var(--accent);color:var(--accent-text);transform:translateY(-14px)}
+.dc:disabled{opacity:.5;cursor:default}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+.stories{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.story{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--panel)}
+.story.cur{border-color:var(--accent);background:var(--accent-soft)}
+.story .t{flex:1;min-width:0;overflow-wrap:anywhere;cursor:pointer}
+.badge{background:var(--ok);color:#fff;border-radius:6px;padding:1px 8px;font-weight:700;font-size:13px}
+.x{background:none;border:0;color:var(--muted);font-size:18px;line-height:1;padding:2px 6px}
+.x:hover{color:#c43b3b}
+.muted{color:var(--muted);font-size:13px}
+.sum{font-size:13px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<div id="banner" class="banner" hidden></div>
+
+<!-- Startseite -->
+<section id="landing" hidden>
+  <header class="top"><div class="logo">Scrum<span>Poker</span></div><div class="spacer"></div>
+    <button class="btn ghost small" data-act="theme" title="Hell/Dunkel">◐</button></header>
+  <div class="landing">
+    <h1>Aufwände gemeinsam schätzen</h1>
+    <p class="lead">Raum erstellen, Code teilen, verdeckt Karten wählen und gemeinsam aufdecken.</p>
+    <div class="panel" style="margin-bottom:16px">
+      <div class="field"><label for="nameIn">Dein Name</label>
+        <input id="nameIn" maxlength="24" placeholder="z. B. Anna" autocomplete="off"></div>
+      <div class="err-text" id="landErr"></div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h2>Neuen Raum erstellen</h2>
+        <div class="field"><label for="deckIn">Kartendeck</label><select id="deckIn"></select></div>
+        <button class="btn" data-act="create">Raum erstellen</button>
+      </div>
+      <div class="panel">
+        <h2>Raum beitreten</h2>
+        <div class="field"><label for="codeIn">Raumcode</label>
+          <input id="codeIn" maxlength="24" placeholder="z. B. k7x9mp" autocomplete="off"></div>
+        <button class="btn" data-act="join">Beitreten</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Raum -->
+<section id="room" hidden>
+  <header class="top">
+    <div class="logo">Scrum<span>Poker</span></div>
+    <span class="chip" id="codeChip"></span>
+    <button class="btn ghost small" data-act="copy">Link kopieren</button>
+    <span class="spacer"></span>
+    <input id="nameEdit" maxlength="24" style="width:150px" aria-label="Dein Name">
+    <button class="btn ghost small" data-act="theme" title="Hell/Dunkel">◐</button>
+    <button class="btn ghost small" data-act="leave">Verlassen</button>
+  </header>
+  <div class="wrap">
+    <div class="stack">
+      <div class="panel">
+        <div class="story-banner">
+          <div class="title" id="storyTitle"></div>
+          <div class="round" id="roundInfo"></div>
+        </div>
+        <div class="table" id="table"></div>
+        <div class="actions" id="actions"></div>
+      </div>
+      <div class="panel" id="resultsPanel" hidden><div id="results"></div></div>
+      <div class="panel" id="deckPanel"><div class="muted" style="text-align:center" id="deckHint"></div><div class="deck" id="deck"></div></div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <h2>Stories</h2>
+        <div class="row">
+          <input id="storyIn" maxlength="120" placeholder="Neue User Story …" style="flex:1;min-width:0">
+          <button class="btn small" data-act="addStory">Hinzufügen</button>
+        </div>
+        <div class="stories" id="stories"></div>
+        <div class="sum" id="storySum"></div>
+      </div>
+      <div class="panel">
+        <h2>Einstellungen</h2>
+        <div class="field"><label for="deckSel">Kartendeck</label><select id="deckSel"></select></div>
+        <label class="chk"><input type="checkbox" id="autoChk"> Automatisch aufdecken, wenn alle gewählt haben</label>
+        <label class="chk" style="margin-top:8px"><input type="checkbox" id="obsChk"> Ich schaue nur zu</label>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script type="module">
+import {firebaseConfig} from "./config.js";
+/* ---------- Konstanten & Helfer ---------- */
+const DECKS = {
+  fib:   {name:"Fibonacci",               cards:["0","1","2","3","5","8","13","21","34","55","89","?","☕"]},
+  mfib:  {name:"Modifiziertes Fibonacci", cards:["0","½","1","2","3","5","8","13","20","40","100","?","☕"]},
+  tshirt:{name:"T-Shirt-Größen",          cards:["XS","S","M","L","XL","XXL","?","☕"]},
+  pow2:  {name:"Zweierpotenzen",          cards:["0","1","2","4","8","16","32","64","?","☕"]}
+};
+const ACTIVE_MS = 150000;
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = v => v === "½" ? 0.5 : (/^\d+(\.\d+)?$/.test(v) ? parseFloat(v) : null);
+const fmt = n => n == null ? "–" : n.toLocaleString("de-DE", {maximumFractionDigits: 1});
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+function setHTML(el, html) { if (el._h !== html) { el._h = html; el.innerHTML = html; } }
+function validCode(c) { return /^[a-z0-9-]{3,24}$/.test(c); }
+function newCode() { const a = "abcdefghjkmnpqrstuvwxyz23456789"; let s = ""; for (let i = 0; i < 6; i++) s += a[Math.floor(Math.random() * a.length)]; return s; }
+
+/* ---------- Lokaler Fallback (nur Tabs im selben Browser) ---------- */
+function makeLocalDB() {
+  const KEY = "scrumpoker-local";
+  let data = {};
+  try { data = JSON.parse(lsGet(KEY) || "{}"); } catch (e) {}
+  const subs = new Set();
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const save = () => lsSet(KEY, JSON.stringify(data));
+  const load = () => { try { data = JSON.parse(lsGet(KEY) || "{}"); } catch (e) { data = {}; } };
+  const notify = () => subs.forEach(f => f());
+  window.addEventListener("storage", e => {
+    if (e.key === KEY) { try { data = JSON.parse(e.newValue || "{}"); } catch (_) { data = {}; } notify(); }
+  });
+  const snapOf = p => ({id: p.split("/").pop(), exists: p in data, data: () => p in data ? clone(data[p]) : undefined});
+  const parent = p => p.split("/").slice(0, -1).join("/");
+  const mint = () => Math.random().toString(36).slice(2, 12);
+  function docRef(path) {
+    return {
+      id: path.split("/").pop(), path,
+      get: async () => snapOf(path),
+      set: async d => { load(); data[path] = clone(d); save(); notify(); },
+      update: async d => { load(); if (!(path in data)) throw {code: "invalid_argument"}; Object.assign(data[path], clone(d)); save(); notify(); },
+      delete: async () => { load(); delete data[path]; save(); notify(); },
+      onSnapshot(next) { const f = () => next(snapOf(path)); subs.add(f); setTimeout(f, 0); return () => subs.delete(f); }
+    };
+  }
+  function colRef(path) {
+    return {
+      path,
+      doc: id => docRef(path + "/" + (id || mint())),
+      onSnapshot(next) {
+        const f = () => { const docs = Object.keys(data).filter(p => parent(p) === path).map(snapOf); next({docs, size: docs.length, empty: !docs.length}); };
+        subs.add(f); setTimeout(f, 0); return () => subs.delete(f);
+      }
+    };
+  }
+  return {doc: docRef, collection: colRef};
+}
+
+/* ---------- Firebase Realtime Database (gleiche kleine API wie der lokale Fallback) ---------- */
+async function makeFirebaseDB(cfg) {
+  const base = "https://www.gstatic.com/firebasejs/10.14.1/";
+  const [appM, authM, dbM] = await Promise.all([import(base + "firebase-app.js"), import(base + "firebase-auth.js"), import(base + "firebase-database.js")]);
+  const app = appM.initializeApp(cfg);
+  const cred = await authM.signInAnonymously(authM.getAuth(app));
+  const rdb = dbM.getDatabase(app);
+  const {ref, get, set, update, remove, onValue, push} = dbM;
+  const snap = (s, id) => ({id, exists: s.exists(), data: () => s.exists() ? s.val() : undefined});
+  function docRef(path) {
+    const id = path.split("/").pop();
+    return {
+      id, path,
+      get: async () => snap(await get(ref(rdb, path)), id),
+      set: d => set(ref(rdb, path), d),
+      update: d => update(ref(rdb, path), d),
+      delete: () => remove(ref(rdb, path)),
+      onSnapshot: (next, err) => onValue(ref(rdb, path), s => next(snap(s, id)), err)
+    };
+  }
+  function colRef(path) {
+    return {
+      path,
+      doc: id => docRef(path + "/" + (id || push(ref(rdb, path)).key)),
+      onSnapshot: (next, err) => onValue(ref(rdb, path), s => {
+        const docs = [];
+        s.forEach(c => { docs.push({id: c.key, exists: true, data: () => c.val()}); });
+        next({docs, size: docs.length, empty: !docs.length});
+      }, err)
+    };
+  }
+  return {db: {doc: docRef, collection: colRef}, uid: cred.user.uid};
+}
+
+/* ---------- Zustand ---------- */
+const S = {
+  db: null, uid: null, local: false,
+  name: "", code: null, room: null, players: [], stories: [], priv: null,
+  unsubs: [], hb: null, tick: null, pubRound: null, revRound: null, finalPick: null, finalRound: null
+};
+const refs = {};
+
+/* ---------- Start ---------- */
+async function boot() {
+  const th = lsGet("sp-theme");
+  document.documentElement.dataset.theme = th || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  S.name = lsGet("sp-name") || "";
+  for (const k in DECKS) { for (const sel of ["#deckIn", "#deckSel"]) { const o = document.createElement("option"); o.value = k; o.textContent = DECKS[k].name; $(sel).appendChild(o); } }
+  bind();
+  const configured = firebaseConfig && firebaseConfig.apiKey && firebaseConfig.databaseURL && !/DEIN|YOUR|HIER/i.test(firebaseConfig.apiKey + firebaseConfig.databaseURL);
+  let fbErr = "";
+  if (configured) {
+    try { const fb = await makeFirebaseDB(firebaseConfig); S.db = fb.db; S.uid = fb.uid; }
+    catch (e) { fbErr = "Firebase-Verbindung fehlgeschlagen (" + (e && (e.code || e.message) || "Fehler") + "). Ist „Anonym“ unter Authentication aktiviert?"; }
+  }
+  if (!S.db) {
+    S.local = true; S.db = makeLocalDB();
+    try { S.uid = sessionStorage.getItem("sp-uid"); } catch (e) {}
+    if (!S.uid) { S.uid = "l" + Math.random().toString(36).slice(2, 10); try { sessionStorage.setItem("sp-uid", S.uid); } catch (e) {} }
+    if (fbErr) banner(fbErr + " Demo-Modus: nur Tabs im selben Browser.", true);
+    else banner("Firebase ist noch nicht eingerichtet (siehe config.js). Demo-Modus: Synchronisierung nur zwischen Tabs im selben Browser.");
+  }
+  addEventListener("hashchange", route);
+  route();
+}
+function banner(msg, err) { const b = $("#banner"); b.hidden = !msg; b.className = "banner" + (err ? " err" : ""); b.textContent = msg || ""; }
+
+function route() {
+  const code = (location.hash || "").slice(1).toLowerCase();
+  if (validCode(code)) { if (S.code !== code) enterRoom(code); }
+  else { if (S.code) leaveRoom(); showLanding(); }
+}
+function showLanding() { $("#landing").hidden = false; $("#room").hidden = true; $("#nameIn").value = S.name; }
+
+/* ---------- Raum betreten / verlassen ---------- */
+async function enterRoom(code) {
+  if (!S.name) { showLanding(); $("#codeIn").value = code; $("#landErr").textContent = "Bitte gib zuerst deinen Namen ein und tritt dann bei."; history.replaceState(null, "", location.pathname + location.search); return; }
+  leaveRoom();
+  S.code = code;
+  $("#landing").hidden = true; $("#room").hidden = false;
+  $("#codeChip").textContent = code; $("#nameEdit").value = S.name;
+  const db = S.db, base = "rooms/" + code;
+  refs.room = db.doc(base + "/meta");
+  refs.me = db.doc(base + "/players/" + S.uid);
+  refs.priv = db.doc("private/" + S.uid + "/" + code);
+  refs.players = db.collection(base + "/players");
+  refs.stories = db.collection(base + "/stories");
+  try {
+    const rs = await refs.room.get();
+    if (!rs.exists) await refs.room.set({deck: lsGet("sp-newdeck") || "fib", round: 1, revealed: false, storyId: null, auto: false, created: Date.now()});
+    const ms = await refs.me.get();
+    if (ms.exists) await refs.me.update({name: S.name, seen: Date.now()});
+    else await refs.me.set({name: S.name, observer: false, voted: null, vote: null, voteRound: null, seen: Date.now()});
+  } catch (e) { banner("Konnte dem Raum nicht beitreten (Verbindung oder Datenbank-Regeln prüfen).", true); }
+  S.unsubs.push(refs.room.onSnapshot(s => { S.room = s.exists ? s.data() : null; update(); }, errSub));
+  S.unsubs.push(refs.players.onSnapshot(s => { S.players = s.docs.map(d => Object.assign({id: d.id}, d.data())); update(); }, errSub));
+  S.unsubs.push(refs.stories.onSnapshot(s => { S.stories = s.docs.map(d => Object.assign({id: d.id}, d.data())).sort((a, b) => (a.created || 0) - (b.created || 0)); update(); }, errSub));
+  S.unsubs.push(refs.priv.onSnapshot(s => { S.priv = s.exists ? s.data() : null; update(); }, errSub));
+  S.hb = setInterval(() => { if (!document.hidden && refs.me) refs.me.update({seen: Date.now()}).catch(() => {}); }, 45000);
+  S.tick = setInterval(render, 30000);
+}
+function errSub(e) { banner("Verbindung zur Datenbank unterbrochen (" + (e && e.code || "Fehler") + "). Bitte Seite neu laden.", true); }
+function leaveRoom() {
+  S.unsubs.forEach(f => { try { f(); } catch (e) {} }); S.unsubs = [];
+  clearInterval(S.hb); clearInterval(S.tick);
+  S.code = null; S.room = null; S.players = []; S.stories = []; S.priv = null; S.pubRound = null; S.revRound = null;
+}
+
+/* ---------- Abgeleitete Werte ---------- */
+const me = () => S.players.find(p => p.id === S.uid) || null;
+const isActive = p => p.id === S.uid || (Date.now() - (p.seen || 0)) < ACTIVE_MS;
+const voters = () => S.players.filter(p => !p.observer && isActive(p));
+function myVote() { return S.priv && S.room && S.priv.round === S.room.round ? S.priv.value : null; }
+function currentStory() { return S.room && S.stories.find(s => s.id === S.room.storyId) || null; }
+function stats(votes) {
+  const counts = {}; votes.forEach(v => counts[v] = (counts[v] || 0) + 1);
+  const nums = votes.map(num).filter(x => x !== null).sort((a, b) => a - b);
+  let avg = null, med = null;
+  if (nums.length) { avg = nums.reduce((a, b) => a + b, 0) / nums.length; med = nums.length % 2 ? nums[(nums.length - 1) / 2] : (nums[nums.length / 2 - 1] + nums[nums.length / 2]) / 2; }
+  let mode = null, max = 0, tie = false;
+  for (const k in counts) { if (counts[k] > max) { max = counts[k]; mode = k; tie = false; } else if (counts[k] === max) tie = true; }
+  return {counts, avg, med, n: votes.length, mode: tie ? null : mode, consensus: Object.keys(counts).length === 1 && votes.length > 1};
+}
+function suggestion(cards, st) {
+  if (st.consensus) return Object.keys(st.counts)[0];
+  if (st.avg != null) {
+    let best = null, d = 1e9;
+    cards.forEach(c => { const n = num(c); if (n == null) return; const x = Math.abs(n - st.avg); if (x < d || (x === d && n > num(best))) { d = x; best = c; } });
+    return best;
+  }
+  return st.mode || cards[0];
+}
+
+/* ---------- Synchronisation (Schreibaktionen aus dem Zustand) ---------- */
+function update() {
+  render();
+  const r = S.room; if (!r || !refs.me) return;
+  const m = me();
+  // Eigene Stimme beim Aufdecken veröffentlichen (bis dahin liegt sie privat)
+  if (r.revealed && m && S.priv && S.priv.round === r.round && S.priv.value != null && m.voteRound !== r.round && S.pubRound !== r.round) {
+    const rd = r.round;
+    S.pubRound = rd;
+    refs.me.update({vote: S.priv.value, voteRound: rd}).catch(() => { S.pubRound = null; });
+    // Falls die Stimme (z. B. durch gleichzeitige Schreibzugriffe) nicht ankam: erneut versuchen
+    setTimeout(() => { const mm = me(); if (S.room && S.room.round === rd && S.room.revealed && !(mm && mm.voteRound === rd)) { S.pubRound = null; update(); } }, 1500);
+  }
+  // Automatisch aufdecken
+  if (r.auto && !r.revealed && S.revRound !== r.round) {
+    const v = voters();
+    if (v.length > 0 && v.every(p => p.voted === r.round)) {
+      S.revRound = r.round;
+      refs.room.update({revealed: true}).catch(() => { S.revRound = null; });
+    }
+  }
+}
+
+/* ---------- Rendering ---------- */
+function render() {
+  const r = S.room; if (!r || !S.code) return;
+  const deck = DECKS[r.deck] || DECKS.fib, m = me();
+  const st = currentStory();
+  setHTML($("#storyTitle"), st ? esc(st.title) : '<span class="muted">Keine Story ausgewählt – füge rechts eine hinzu oder schätze frei.</span>');
+  $("#roundInfo").textContent = "Runde " + r.round;
+
+  // Tisch
+  const seats = S.players.slice().sort((a, b) => (a.name || "").localeCompare(b.name || "", "de")).map(p => {
+    let card;
+    if (p.observer) card = '<div class="pc obs" title="Zuschauer">👁</div>';
+    else if (r.revealed) card = p.voteRound === r.round && p.vote != null ? '<div class="pc face">' + esc(p.vote) + '</div>' : '<div class="pc empty">–</div>';
+    else card = p.voted === r.round ? '<div class="pc back">✓</div>' : '<div class="pc empty"></div>';
+    const you = p.id === S.uid;
+    return '<div class="seat' + (isActive(p) ? "" : " off") + '">' + card + '<div class="nm" title="' + esc(p.name) + '">' + esc(p.name || "?") + (you ? "<small>du</small>" : (isActive(p) ? "" : "<small>offline</small>")) + '</div></div>';
+  });
+  setHTML($("#table"), seats.join("") || '<div class="muted">Warte auf Teilnehmer …</div>');
+
+  // Aktionsleiste
+  const v = voters(), done = v.filter(p => p.voted === r.round).length;
+  let act = "";
+  if (!r.revealed) act += '<button class="btn" data-act="reveal"' + (done === 0 ? " disabled" : "") + '>Karten aufdecken</button><span class="progress">' + done + ' von ' + v.length + ' haben gewählt</span>';
+  else act += '<button class="btn" data-act="newRound">Neue Runde</button>';
+  setHTML($("#actions"), act);
+
+  // Ergebnis
+  const rp = $("#resultsPanel");
+  if (r.revealed) {
+    const votes = S.players.filter(p => !p.observer && p.voteRound === r.round && p.vote != null).map(p => p.vote);
+    const s = stats(votes);
+    const keys = Object.keys(s.counts).sort((a, b) => deck.cards.indexOf(a) - deck.cards.indexOf(b));
+    const bars = keys.map(k => '<div class="bar"><span>' + esc(k) + '</span><div class="track"><div class="fill" style="width:' + (s.counts[k] / s.n * 100) + '%"></div></div><b>' + s.counts[k] + '</b></div>').join("");
+    if (S.finalRound !== r.round) { S.finalRound = r.round; S.finalPick = null; }
+    const sug = s.n ? suggestion(deck.cards, s) : null;
+    const pick = S.finalPick || (st && st.result) || sug || deck.cards[0];
+    const opts = deck.cards.map(c => '<option value="' + esc(c) + '"' + (c === pick ? " selected" : "") + '>' + esc(c) + '</option>').join("");
+    const hasNum = s.avg != null;
+    let html = '<div class="results"><div><div class="kpis">' +
+      (hasNum ? '<div class="kpi"><div class="v">' + fmt(s.avg) + '</div><div class="l">Durchschnitt</div></div><div class="kpi"><div class="v">' + fmt(s.med) + '</div><div class="l">Median</div></div>' : '<div class="kpi"><div class="v">' + esc(s.mode || "–") + '</div><div class="l">Häufigste</div></div>') +
+      '</div>' + (s.consensus ? '<div class="consensus" style="margin-top:10px">🎉 Einigkeit!</div>' : "") + '</div><div class="bars">' + (bars || '<span class="muted">Keine Stimmen abgegeben.</span>') + '</div></div>';
+    if (st) html += '<div class="final"><span>Ergebnis für diese Story:</span><select id="finalSel">' + opts + '</select><button class="btn small" data-act="saveResult">Übernehmen</button>' + (st.result ? '<span class="muted">aktuell: ' + esc(st.result) + '</span>' : "") + '</div>';
+    setHTML($("#results"), html);
+    rp.hidden = false;
+  } else rp.hidden = true;
+
+  // Karten
+  const mine = myVote(), observer = !!(m && m.observer);
+  $("#deckPanel").hidden = observer;
+  $("#deckHint").textContent = r.revealed ? "Runde ist aufgedeckt – starte eine neue Runde, um erneut zu wählen." : (mine != null ? "Du hast gewählt. Klicke erneut auf die Karte, um deine Wahl zurückzuziehen." : "Wähle deine Karte – sie bleibt verdeckt, bis aufgedeckt wird.");
+  setHTML($("#deck"), deck.cards.map(c => '<button class="dc' + (mine === c ? " sel" : "") + '" data-act="vote" data-v="' + esc(c) + '"' + (r.revealed ? " disabled" : "") + '>' + esc(c) + '</button>').join(""));
+
+  // Stories
+  setHTML($("#stories"), S.stories.length ? S.stories.map(s => '<div class="story' + (s.id === r.storyId ? " cur" : "") + '"><span class="t" data-act="pickStory" data-id="' + esc(s.id) + '" title="Als aktuelle Story schätzen">' + esc(s.title) + '</span>' + (s.result ? '<span class="badge">' + esc(s.result) + '</span>' : "") + '<button class="x" data-act="delStory" data-id="' + esc(s.id) + '" title="Löschen" aria-label="Story löschen">×</button></div>').join("") : '<div class="muted">Noch keine Stories.</div>');
+  const numRes = S.stories.map(s => num(s.result || "")).filter(x => x !== null);
+  $("#storySum").textContent = S.stories.length ? (S.stories.filter(s => s.result).length + " von " + S.stories.length + " geschätzt" + (numRes.length ? " · Summe: " + fmt(numRes.reduce((a, b) => a + b, 0)) : "")) : "";
+
+  // Einstellungen
+  if (document.activeElement !== $("#deckSel")) $("#deckSel").value = r.deck;
+  $("#autoChk").checked = !!r.auto; $("#obsChk").checked = observer;
+}
+
+/* ---------- Aktionen ---------- */
+async function safe(p) { try { await p; } catch (e) { banner("Aktion nicht möglich: " + (e && (e.message || e.code) || "Fehler") + " (Verbindung oder Datenbank-Regeln prüfen).", true); } }
+
+const actions = {
+  theme() { const t = document.documentElement.dataset.theme === "dark" ? "light" : "dark"; document.documentElement.dataset.theme = t; lsSet("sp-theme", t); },
+  create() {
+    if (!takeName()) return;
+    lsSet("sp-newdeck", $("#deckIn").value);
+    S.code = null; setHash(newCode());
+  },
+  join() {
+    if (!takeName()) return;
+    const c = $("#codeIn").value.trim().toLowerCase().replace(/^#/, "");
+    if (!validCode(c)) { $("#landErr").textContent = "Bitte einen gültigen Raumcode eingeben (3–24 Zeichen: a–z, 0–9, -)."; return; }
+    setHash(c);
+  },
+  leave() { setHash(""); },
+  async copy(btn) {
+    const link = location.href.split("#")[0] + "#" + S.code;
+    try { await navigator.clipboard.writeText(link); btn.textContent = "Kopiert ✓"; }
+    catch (e) { btn.textContent = "Code: " + S.code; }
+    setTimeout(() => btn.textContent = "Link kopieren", 2000);
+  },
+  async vote(btn) {
+    const r = S.room, m = me(); if (!r || r.revealed || !m || m.observer) return;
+    const v = btn.dataset.v, cur = myVote();
+    if (cur === v) { await safe((async () => { await refs.priv.set({round: r.round, value: null}); await refs.me.update({voted: null}); })()); }
+    else { await safe((async () => { await refs.priv.set({round: r.round, value: v}); await refs.me.update({voted: r.round}); })()); }
+  },
+  reveal() { return safe(refs.room.update({revealed: true})); },
+  newRound() { const r = S.room; return safe(refs.room.update({round: r.round + 1, revealed: false})); },
+  async addStory() {
+    const inp = $("#storyIn"), t = inp.value.trim(); if (!t) return;
+    inp.value = "";
+    const ref = refs.stories.doc();
+    await safe(ref.set({title: t.slice(0, 120), result: null, created: Date.now()}));
+    if (S.room && !S.room.storyId) await safe(refs.room.update({storyId: ref.id}));
+  },
+  pickStory(el) { const r = S.room; return safe(refs.room.update({storyId: el.dataset.id, round: r.round + 1, revealed: false})); },
+  async delStory(el) {
+    const id = el.dataset.id;
+    await safe(S.db.doc("rooms/" + S.code + "/stories/" + id).delete());
+    if (S.room && S.room.storyId === id) await safe(refs.room.update({storyId: null}));
+  },
+  saveResult() {
+    const st = currentStory(); if (!st) return;
+    const v = ($("#finalSel") || {}).value;
+    return safe(S.db.doc("rooms/" + S.code + "/stories/" + st.id).update({result: v}));
+  }
+};
+function takeName() {
+  const n = $("#nameIn").value.trim().slice(0, 24);
+  if (!n) { $("#landErr").textContent = "Bitte gib deinen Namen ein."; $("#nameIn").focus(); return false; }
+  $("#landErr").textContent = ""; S.name = n; lsSet("sp-name", n); return true;
+}
+function setHash(h) {
+  if (h) location.hash = h; else history.replaceState(null, "", location.pathname + location.search);
+  route();
+}
+function bind() {
+  document.addEventListener("click", e => {
+    const el = e.target.closest("[data-act]"); if (!el || el.disabled) return;
+    const f = actions[el.dataset.act]; if (f) f(el);
+  });
+  $("#storyIn").addEventListener("keydown", e => { if (e.key === "Enter") actions.addStory(); });
+  $("#nameIn").addEventListener("keydown", e => { if (e.key === "Enter") actions.create(); });
+  $("#codeIn").addEventListener("keydown", e => { if (e.key === "Enter") actions.join(); });
+  $("#nameEdit").addEventListener("change", e => {
+    const n = e.target.value.trim().slice(0, 24); if (!n) { e.target.value = S.name; return; }
+    S.name = n; lsSet("sp-name", n); if (refs.me) safe(refs.me.update({name: n}));
+  });
+  $("#deckSel").addEventListener("change", e => { const r = S.room; if (r && e.target.value !== r.deck) safe(refs.room.update({deck: e.target.value, round: r.round + 1, revealed: false})); });
+  $("#autoChk").addEventListener("change", e => safe(refs.room.update({auto: e.target.checked})));
+  $("#obsChk").addEventListener("change", async e => {
+    const on = e.target.checked;
+    await safe(refs.me.update(on ? {observer: true, voted: null} : {observer: false}));
+    if (on && S.room) await safe(refs.priv.set({round: S.room.round, value: null}));
+  });
+  document.addEventListener("change", e => { if (e.target.id === "finalSel") S.finalPick = e.target.value; });
+}
+boot();
+</script>
+</body>
+</html>

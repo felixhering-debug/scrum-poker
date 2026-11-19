@@ -1,0 +1,34 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$room": {
+        ".read": "auth != null",
+        "meta": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['deck','round'])"
+        },
+        "stories": {
+          "$story": {
+            ".write": "auth != null",
+            "title": { ".validate": "newData.isString() && newData.val().length <= 120" },
+            "result": { ".validate": "newData.isString() && newData.val().length <= 8" }
+          }
+        },
+        "players": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            "name": { ".validate": "newData.isString() && newData.val().length <= 24" }
+          }
+        }
+      }
+    },
+    "private": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    }
+  }
+}
