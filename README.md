@@ -2,40 +2,39 @@
 
 Live: https://felixhering-debug.github.io/scrum-poker/
 
-Seite zur Aufwandsschätzung von User Stories im agilen Team, ohne Konten und ohne eigenen Server.
-Statische Seite (GitHub Pages) plus Firebase Realtime Database für die Live-Synchronisierung.
+Planning poker for agile teams to estimate user stories. No accounts and no own server: a static page (GitHub Pages) plus Firebase Realtime Database for live sync.
 
-## Funktionen
-- Raum erstellen, Link oder Code teilen, mit Namen beitreten
-- Verdeckte Kartenwahl: Die Stimme liegt bis zum Aufdecken im privaten Bereich der Datenbank (nur du kannst sie lesen)
-- Aufdecken per Knopf oder automatisch, Durchschnitt, Median, Verteilung, „Einigkeit“
-- Story-Liste mit Endergebnis und Summe
-- Decks: Fibonacci, modifiziertes Fibonacci, T-Shirt-Größen, Zweierpotenzen
-- Zuschauer-Modus, Hell/Dunkel
+## Features
+- Create a room, share the link or code, join with a name
+- Secret voting: a vote stays in the private area of the database until the cards are revealed
+- Reveal by button or automatically when everyone has voted; average, median, distribution, consensus
+- Story list with a result per story and a total
+- Decks: Fibonacci, modified Fibonacci, T-shirt sizes, powers of two
+- Observer mode, light/dark
 
-## Einrichtung (einmalig, ca. 10 Minuten)
+## Setup (one time, about 10 minutes)
 
-### 1. Firebase-Projekt anlegen
-1. https://console.firebase.google.com → „Projekt hinzufügen“ (Google Analytics kann aus bleiben).
-2. **Build → Authentication → Los geht’s → Anmeldemethode → Anonym → aktivieren.**
-3. **Build → Realtime Database → Datenbank erstellen**, Standort z. B. Belgien (europe-west1), „Im gesperrten Modus starten“.
-4. Reiter **Regeln**: Inhalt von `database.rules.json` einfügen und **Veröffentlichen**.
-5. **Projekteinstellungen (Zahnrad) → Allgemein → Meine Apps → Web-App (`</>`)** hinzufügen. Dort steht ein `firebaseConfig`-Block.
+### 1. Create a Firebase project
+1. https://console.firebase.google.com → Add project (Analytics can stay off).
+2. **Build → Authentication → Get started → Sign-in method → Anonymous → enable.**
+3. **Build → Realtime Database → Create database**, pick a location, start in **locked mode**.
+4. Tab **Rules**: paste the content of `database.rules.json` and **Publish**.
+5. **Project settings (gear) → General → Your apps → Web app (`</>`)**: register an app and copy the `firebaseConfig` block.
 
-### 2. Konfiguration eintragen
-Die Werte aus dem `firebaseConfig`-Block in `config.js` übernehmen (inklusive `databaseURL`). Committen und pushen.
+### 2. Enter the configuration
+Copy the values into `config.js` (including `databaseURL`), commit and push.
 
-### 3. Veröffentlichen mit GitHub Pages
-Repo → **Settings → Pages → Source: Deploy from a branch → Branch `main`, Ordner `/ (root)`**. Nach ca. einer Minute ist die Seite unter `https://<name>.github.io/<repo>/` erreichbar. Diesen Link ans Team geben.
+### 3. Publish with GitHub Pages
+Repo → **Settings → Pages → Deploy from a branch → `main`, folder `/ (root)`**. After about a minute the site is available at `https://<name>.github.io/<repo>/`.
 
-### 4. Domain für die Anmeldung freigeben
-Firebase → **Authentication → Einstellungen → Autorisierte Domains**: `<name>.github.io` hinzufügen.
+### 4. Authorize the domain
+Firebase → **Authentication → Settings → Authorized domains**: add `<name>.github.io`.
 
-## Grenzen
-- Alle, die den Raumcode kennen, können beitreten und Stories ändern (wie beim Vorbild).
-- Räume werden nicht automatisch gelöscht; alte Räume kannst du in der Firebase-Konsole unter Realtime Database → `rooms` entfernen.
-- Kostenlos im Spark-Tarif, für Teamgrößen völlig ausreichend.
-- Ohne eingetragene Konfiguration läuft ein Demo-Modus (nur Tabs im selben Browser).
+## Limits
+- Anyone who knows a room code can join and change stories (like the original tools).
+- Rooms are not deleted automatically; remove old ones in the Firebase console under Realtime Database → `rooms`.
+- Free on the Spark plan, plenty for team sizes.
+- Without a configuration the page runs in a demo mode (only tabs in the same browser are synced).
 
-## Lokal ausprobieren
-`python3 -m http.server 8000` im Ordner starten und http://localhost:8000 öffnen (Module laden nicht über `file://`).
+## Try locally
+Run `python3 -m http.server 8000` in the folder and open http://localhost:8000 (modules do not load over `file://`).

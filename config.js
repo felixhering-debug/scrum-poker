@@ -1,6 +1,6 @@
-// Firebase-Konfiguration (Anleitung: README.md).
-// Diese Werte sind öffentlich einsehbar und das ist bei Firebase so vorgesehen;
-// der Schutz kommt aus den Datenbank-Regeln (database.rules.json).
+// Firebase configuration (see README.md).
+// These values are public by design in Firebase;
+// protection comes from the database rules (database.rules.json).
 export const firebaseConfig = {
   apiKey: "AIzaSyBRY5znXIc1YmZMyDuWUttnaGLG64g8NJM",
   authDomain: "scrum-poker-27e13.firebaseapp.com",
