@@ -326,14 +326,14 @@ async function enterRoom(code) {
     if (ms.exists) await refs.me.update({name: S.name, seen: Date.now()});
     else await refs.me.set({name: S.name, observer: false, voted: null, vote: null, voteRound: null, seen: Date.now()});
   } catch (e) { banner("Konnte dem Raum nicht beitreten (Verbindung oder Datenbank-Regeln prüfen).", true); }
-  S.unsubs.push(refs.room.onSnapshot(s => { S.room = s.exists ? s.data() : null; update(); }, errSub));
-  S.unsubs.push(refs.players.onSnapshot(s => { S.players = s.docs.map(d => Object.assign({id: d.id}, d.data())); update(); }, errSub));
-  S.unsubs.push(refs.stories.onSnapshot(s => { S.stories = s.docs.map(d => Object.assign({id: d.id}, d.data())).sort((a, b) => (a.created || 0) - (b.created || 0)); update(); }, errSub));
-  S.unsubs.push(refs.priv.onSnapshot(s => { S.priv = s.exists ? s.data() : null; update(); }, errSub));
+  S.unsubs.push(refs.room.onSnapshot(s => { S.room = s.exists ? s.data() : null; update(); }, errSub("meta")));
+  S.unsubs.push(refs.players.onSnapshot(s => { S.players = s.docs.map(d => Object.assign({id: d.id}, d.data())); update(); }, errSub("players")));
+  S.unsubs.push(refs.stories.onSnapshot(s => { S.stories = s.docs.map(d => Object.assign({id: d.id}, d.data())).sort((a, b) => (a.created || 0) - (b.created || 0)); update(); }, errSub("stories")));
+  S.unsubs.push(refs.priv.onSnapshot(s => { S.priv = s.exists ? s.data() : null; update(); }, errSub("private")));
   S.hb = setInterval(() => { if (!document.hidden && refs.me) refs.me.update({seen: Date.now()}).catch(() => {}); }, 45000);
   S.tick = setInterval(render, 30000);
 }
-function errSub(e) { banner("Verbindung zur Datenbank unterbrochen (" + (e && e.code || "Fehler") + "). Bitte Seite neu laden.", true); }
+function errSub(label) { return e => banner("Verbindung zur Datenbank unterbrochen bei „" + label + "“ (" + (e && (e.code || e.message) || "Fehler") + "). Bitte Seite neu laden.", true); }
 function leaveRoom() {
   S.unsubs.forEach(f => { try { f(); } catch (e) {} }); S.unsubs = [];
   clearInterval(S.hb); clearInterval(S.tick);
