@@ -6,6 +6,7 @@
 <title>Scrum Poker</title>
 <style>
 :root{
+  --overlay:linear-gradient(180deg,rgba(255,243,234,.55),rgba(255,243,234,.82));
   --bg:#fff3ea; --panel:#ffffff; --text:#2a1240; --muted:#85648f; --line:#f0d4d6;
   --accent:#d81e6b; --accent-text:#2a0a3a; --accent-soft:#ffe3ec; --accent2:#0e9f98; --ok:#0e9f98; --warn:#e07a1f;
   --card:#ffffff; --back1:#d81e6b; --back2:#ff8a3d; --shadow:0 2px 10px rgba(120,30,90,.12);
@@ -13,6 +14,7 @@
   --glow:radial-gradient(900px 380px at 50% -120px,rgba(255,120,150,.35),transparent 70%);
 }
 [data-theme="dark"]{
+  --overlay:linear-gradient(180deg,rgba(21,10,38,.45),rgba(21,10,38,.82));
   --bg:#150a26; --panel:#231040; --text:#f6ecff; --muted:#b497d6; --line:#3d2063;
   --accent:#ff5fa2; --accent-text:#2a0a3a; --accent-soft:#3a1a5e; --accent2:#2de2d0; --ok:#2de2d0; --warn:#ffb14a;
   --card:#2d1650; --back1:#ff3d8b; --back2:#8a3dff; --shadow:0 4px 18px rgba(0,0,0,.45);
@@ -20,7 +22,8 @@
   --glow:radial-gradient(900px 420px at 50% -140px,rgba(255,77,148,.38),rgba(138,61,255,.18) 45%,transparent 72%);
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg) var(--glow) no-repeat;background-attachment:fixed;color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+html{margin:0;background:var(--bg)}
+body{margin:0;background:transparent;color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 button{font:inherit;cursor:pointer}
 input,select{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
 input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
@@ -124,6 +127,13 @@ input:focus,select:focus,button:focus-visible{outline-color:var(--accent2)}
 .specrow{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .chk.spec{color:var(--text);font-weight:600}
 .chk input{accent-color:var(--accent)}
+
+/* Background image */
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--overlay),url("bg.jpg") center/cover no-repeat}
+.panel{background:color-mix(in srgb,var(--panel) 80%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.top{background:color-mix(in srgb,var(--panel) 78%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.story{background:color-mix(in srgb,var(--panel) 70%,transparent)}
+.story.cur{background:color-mix(in srgb,var(--accent-soft) 85%,transparent)}
 </style>
 </head>
 <body>
